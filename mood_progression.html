@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Garden — Mood Progression</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+        }
+        
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: linear-gradient(135deg, #f0fdf4 0%, #d8f3dc 35%, #fde2e4 70%, #fff1e6 100%);
+            padding: 40px 20px;
+        }
+        
+        .title {
+            font-size: 2.8rem;
+            color: #2d6a4f;
+            margin-bottom: 30px;
+            text-align: center;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .container {
+            width: 900px;
+            max-width: 95%;
+            min-height: 500px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .graph-section {
+            width: 100%;
+            background: #fefefe;
+            border-radius: 12px;
+            padding: 30px;
+            border: 1px solid rgba(45, 104, 79, 0.1);
+        }
+        
+        .graph-container {
+            width: 100%;
+            height: 400px;
+            position: relative;
+            background: #fefefe;
+            border-radius: 8px;
+            border: 1px solid rgba(45, 104, 79, 0.1);
+        }
+        
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            color: #2d6a4f;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        
+        .error {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            color: #e74c3c;
+            font-size: 1.1rem;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .controls {
+            width: 100%;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .controls button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            background: #52b788;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s ease, transform 0.2s ease;
+        }
+        
+        .controls button:hover {
+            background: #45a173;
+            transform: translateY(-2px);
+        }
+        
+        .controls button:active {
+            transform: translateY(0);
+        }
+        
+        .controls button.active {
+            background: #45a173;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(45, 104, 79, 0.3);
+        }
+        
+        .info-box {
+            width: 100%;
+            background: rgba(82, 183, 136, 0.1);
+            border-left: 4px solid #52b788;
+            padding: 20px;
+            border-radius: 8px;
+            color: #1b4332;
+            font-size: 0.95rem;
+        }
+        
+        .info-box strong {
+            color: #2d6a4f;
+        }
+    </style>
+</head>
+
+<body>
+    <h1 class="title">Graph</h1>
+
+    <div class="container">
+        <div class="graph-section">
+            <div class="graph-container">
+                <div id="loading" class="loading">Loading your mood data...</div>
+                <canvas id="moodChart" style="display: none;"></canvas>
+                <div id="error" class="error" style="display: none;"></div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="btn7days" class="active">Last 7 Days</button>
+            <button id="btn30days">Last 30 Days</button>
+            <button id="btn90days">Last 90 Days</button>
+        </div>
+
+        <div class="info-box">
+            <strong>Track your emotional journey:</strong> This graph visualizes your mood entries over time, helping you understand patterns in your emotional wellbeing.
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const BACKEND_URL = "http://localhost:5000";
+        
+        // Get user data from localStorage
+        const token = localStorage.getItem("mg_token");
+        const user = JSON.parse(localStorage.getItem("mg_user") || "null");
+        
+        // Check authentication
+        if (!token || !user) {
+            window.location.href = "index.html";
+        }
+        
+        let moodChart = null;
+        let currentDays = 7;
+        
+        // Initialize the page
+        document.addEventListener("DOMContentLoaded", () => {
+            console.log("Mood progression page loaded");
+            loadMoodData(7);
+            setupEventListeners();
+        });
+        
+        function setupEventListeners() {
+            document.getElementById("btn7days").addEventListener("click", () => {
+                setActiveButton("btn7days");
+                loadMoodData(7);
+            });
+            
+            document.getElementById("btn30days").addEventListener("click", () => {
+                setActiveButton("btn30days");
+                loadMoodData(30);
+            });
+            
+            document.getElementById("btn90days").addEventListener("click", () => {
+                setActiveButton("btn90days");
+                loadMoodData(90);
+            });
+        }
+        
+        function setActiveButton(activeId) {
+            document.querySelectorAll('.controls button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById(activeId).classList.add('active');
+        }
+        
+        async function loadMoodData(days) {
+            currentDays = days;
+            showLoading();
+            
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/mood-history?userId=${user.id}&days=${days}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const moodData = await response.json();
+                console.log("Mood data received:", moodData);
+                
+                if (moodData && moodData.length > 0) {
+                    renderChart(moodData);
+                } else {
+                    showError("No mood data available for the selected period.");
+                }
+                
+            } catch (error) {
+                console.error("Error loading mood data:", error);
+                showError("Failed to load mood data. Please check your connection and try again.");
+            }
+        }
+        
+        function renderChart(data) {
+            hideLoading();
+            hideError();
+            
+            const ctx = document.getElementById('moodChart').getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (moodChart) {
+                moodChart.destroy();
+            }
+            
+            // Prepare data for Chart.js
+            const labels = data.map(item => {
+                const date = new Date(item.date);
+                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            });
+            
+            const moodValues = data.map(item => item.mood);
+            
+            moodChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Mood Level',
+                        data: moodValues,
+                        borderColor: '#52b788',
+                        backgroundColor: 'rgba(82, 183, 136, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#52b788',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 2,
+                        pointRadius: 6,
+                        pointHoverRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 10,
+                            min: 0,
+                            ticks: {
+                                stepSize: 1,
+                                color: '#2d6a4f'
+                            },
+                            grid: {
+                                color: 'rgba(45, 106, 79, 0.1)'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: '#2d6a4f'
+                            },
+                            grid: {
+                                color: 'rgba(45, 106, 79, 0.1)'
+                            }
+                        }
+                    },
+                    elements: {
+                        point: {
+                            hoverBackgroundColor: '#45a173'
+                        }
+                    }
+                }
+            });
+            
+            // Show the chart
+            document.getElementById('moodChart').style.display = 'block';
+        }
+        
+        function showLoading() {
+            document.getElementById('loading').style.display = 'flex';
+            document.getElementById('moodChart').style.display = 'none';
+            document.getElementById('error').style.display = 'none';
+        }
+        
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+        
+        function showError(message) {
+            hideLoading();
+            document.getElementById('error').textContent = message;
+            document.getElementById('error').style.display = 'flex';
+            document.getElementById('moodChart').style.display = 'none';
+        }
+        
+        function hideError() {
+            document.getElementById('error').style.display = 'none';
+        }
+    </script>
+</body>
+
+</html>

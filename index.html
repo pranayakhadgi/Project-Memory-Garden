@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Garden — Login / Signup</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+        }
+        
+        body {
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #f0fdf4 0%, #d8f3dc 35%, #fde2e4 70%, #fff1e6 100%);
+        }
+        
+        .container {
+            display: flex;
+            width: 850px;
+            max-width: 95%;
+            height: 580px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border-radius: 16px;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.95);
+        }
+        
+        .left-section,
+        .right-section {
+            flex: 1;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .left-section {
+            background: #fefefe;
+        }
+        
+        .title {
+            font-size: 2.4rem;
+            color: #2d6a4f;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        label {
+            font-weight: 600;
+            color: #1b4332;
+        }
+        
+        input {
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(45, 104, 79, 0.2);
+            font-size: 14px;
+        }
+        
+        button {
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: #52b788;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+        
+        button:hover {
+            background: #45a173;
+        }
+        
+        .switch {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #2d6a4f;
+            text-align: center;
+            cursor: pointer;
+        }
+        
+        .switch span {
+            color: #40916c;
+            text-decoration: underline;
+        }
+        
+        .right-section {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(#f0fdf4, #d8f3dc);
+        }
+        
+        .circle-frame {
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            background: #fefcfb;
+            border: 6px solid #b7e4c7;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .soil {
+            width: 100%;
+            height: 45px;
+            background: #a47148;
+            border-top-left-radius: 100px;
+            border-top-right-radius: 100px;
+            position: absolute;
+            bottom: 0;
+        }
+        
+        .plant {
+            width: 10px;
+            height: 70px;
+            background: #2d6a4f;
+            position: absolute;
+            bottom: 45px;
+            border-radius: 5px;
+            animation: sway 3s ease-in-out infinite alternate;
+            transform-origin: bottom center;
+        }
+        
+        .leaf {
+            width: 22px;
+            height: 12px;
+            background: #52b788;
+            border-radius: 50%;
+            position: absolute;
+        }
+        
+        .leaf.left {
+            left: -18px;
+            top: 25px;
+            transform: rotate(-30deg);
+        }
+        
+        .leaf.right {
+            right: -18px;
+            top: 15px;
+            transform: rotate(30deg);
+        }
+        
+        @keyframes sway {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(5deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="left-section">
+            <h1 class="title">Memory Garden</h1>
+
+            <!-- Login Form -->
+            <form id="loginForm">
+                <label for="loginUsername">Username or Email</label>
+                <input type="text" id="loginIdentifier" placeholder="Enter username" required>
+
+                <label for="loginPassword">Password</label>
+                <input type="password" id="loginPassword" placeholder="Enter password" required>
+
+                <button type="submit">Login</button>
+                <div class="switch">Don't have an account? <span onclick="toggleForms()">Sign up</span></div>
+            </form>
+
+            <!-- Signup Form -->
+            <form id="signupForm" style="display:none;">
+                <label for="signupUsername">Username</label>
+                <input type="text" id="signupUsername" placeholder="Choose a username" required>
+
+                <label for="signupEmail">Email</label>
+                <input type="email" id="signupEmail" placeholder="Enter your email" required>
+
+                <label for="signupPassword">Password</label>
+                <input type="password" id="signupPassword" placeholder="Choose a password" required>
+
+                <label for="signupConfirm">Confirm Password</label>
+                <input type="password" id="signupConfirm" placeholder="Confirm password" required>
+
+                <button type="submit">Sign Up</button>
+                <div class="switch">Already have an account? <span onclick="toggleForms()">Login</span></div>
+            </form>
+        </div>
+
+        <div class="right-section">
+            <div class="circle-frame">
+                <div class="soil"></div>
+                <div class="plant" style="height:60px;">
+                    <div class="leaf left"></div>
+                    <div class="leaf right"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const BACKEND_URL = "http://localhost:5000";
+
+        function toggleForms() {
+            const loginForm = document.getElementById('loginForm');
+            const signupForm = document.getElementById('signupForm');
+            if (loginForm.style.display === 'none') {
+                loginForm.style.display = 'flex';
+                signupForm.style.display = 'none';
+            } else {
+                loginForm.style.display = 'none';
+                signupForm.style.display = 'flex';
+            }
+        }
+        window.toggleForms = toggleForms;
+
+        function showMessage(formEl, msg, ok = true) {
+            let el = formEl.querySelector(".form-msg");
+            if (!el) {
+                el = document.createElement("div");
+                el.className = "form-msg";
+                el.style.marginTop = "8px";
+                el.style.fontWeight = "600";
+                formEl.appendChild(el);
+            }
+            el.style.color = ok ? "#2d6a4f" : "#b00020";
+            el.textContent = msg;
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            console.log("index.js loaded");
+            const loginForm = document.getElementById('loginForm');
+            const signupForm = document.getElementById('signupForm');
+
+            loginForm.addEventListener('submit', async(e) => {
+                e.preventDefault();
+                const identifier = document.getElementById('loginIdentifier').value.trim();
+                const password = document.getElementById('loginPassword').value;
+
+                const btn = loginForm.querySelector("button[type='submit']");
+                const original = btn.textContent;
+                btn.disabled = true;
+                btn.textContent = "Logging in...";
+
+                try {
+                    const res = await fetch(`${BACKEND_URL}/auth/login`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                                identifier,
+                                password
+                            })
+                    });
+                    const data = await res.json();
+                    if (!res.ok) {
+                        showMessage(loginForm, data.error || `Login failed (${res.status})`, false);
+                        return;
+                    }
+
+                    localStorage.setItem("mg_token", data.token);
+                    localStorage.setItem("mg_user", JSON.stringify(data.user));
+
+                    window.location.assign("home.html");
+                } catch (err) {
+                    console.error("login fetch error", err);
+                    showMessage(loginForm, "Network error. Is the backend running?", false);
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = original;
+                }
+            });
+
+            signupForm.addEventListener('submit', async(e) => {
+                e.preventDefault();
+                const username = document.getElementById('signupUsername').value.trim();
+                const email = document.getElementById('signupEmail').value.trim();
+                const password = document.getElementById('signupPassword').value;
+                const confirm = document.getElementById('signupConfirm').value;
+
+                if (password !== confirm) {
+                    showMessage(signupForm, "Passwords do not match!", false);
+                    return;
+                }
+
+                const btn = signupForm.querySelector("button[type='submit']");
+                const original = btn.textContent;
+                btn.disabled = true;
+                btn.textContent = "Creating…";
+
+                try {
+                    const res = await fetch(`${BACKEND_URL}/auth/signup`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                                username,
+                                email,
+                                password
+                            })
+                    });
+                    const data = await res.json();
+                    if (!res.ok) {
+                        showMessage(signupForm, data.error || `Signup failed (${res.status})`, false);
+                        return;
+                    }
+
+                    window.location.href = "index.html?signedUp=1";
+                } catch (err) {
+                    console.error("signup fetch error", err);
+                    showMessage(signupForm, "Network error. Is the backend running?", false);
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = original;
+                }
+            });
+
+        });
+
+        const params = new URLSearchParams(window.location.search);
+        if (params.get("signedUp") === "1") {
+            const loginForm = document.getElementById('loginForm');
+            const signupForm = document.getElementById('signupForm');
+            loginForm.style.display = 'flex';
+            signupForm.style.display = 'none';
+
+            const msg = document.createElement("div");
+            msg.style.marginTop = "8px";
+            msg.style.fontWeight = "600";
+            msg.style.color = "#2d6a4f";
+            msg.textContent = "Account created! Please log in.";
+            loginForm.appendChild(msg);
+
+            history.replaceState({}, "", "index.html");
+        }
+    </script>
+
+</body>
+
+</html>
