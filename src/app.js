@@ -17,15 +17,21 @@ const app = express();
  */
 app.use(
   cors({
-    // Allow both localhost and 127.0.0.1 for Live Server compatibility
-    origin: ["http://localhost:5500", "http://127.0.0.1:5500"],
+    // Allow both localhost and Vercel deployment URLs
+    origin: process.env.CORS_ORIGIN 
+      ? process.env.CORS_ORIGIN.split(",").map(url => url.trim())
+      : ["http://localhost:5500", "http://127.0.0.1:5500", /\.vercel\.app$/, /\.vercel\.dev$/],
     credentials: false,
   })
 );
 app.use(express.json());
 
-// (Optional) serve static files if you want to host the frontend from Express
-// app.use(express.static("public"));
+// Serve static files (HTML, CSS, JS, images, etc.) from root directory
+// This allows Vercel to serve frontend files through the Express app
+app.use(express.static(process.cwd(), {
+  index: ['index.html'],
+  extensions: ['html', 'css', 'js', 'ico', 'png', 'jpg', 'jpeg', 'gif', 'svg']
+}));
 
 /**
  * Routes

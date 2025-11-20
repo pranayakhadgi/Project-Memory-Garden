@@ -1,5 +1,6 @@
 // home.js (auth guard + optional token check)
-const BACKEND_URL = "http://localhost:5000"; // set "" if serving via Express static
+// BACKEND_URL should be set by config.js if included in HTML, otherwise fallback
+const BACKEND_URL = window.BACKEND_URL || "http://localhost:5000";
 
 const token = localStorage.getItem("mg_token");
 const user  = JSON.parse(localStorage.getItem("mg_user") || "null");

@@ -220,8 +220,10 @@
         </div>
     </div>
 
+    <script src="config.js"></script>
     <script>
-        const BACKEND_URL = "http://localhost:5000";
+        // BACKEND_URL is now set by config.js
+        const BACKEND_URL = window.BACKEND_URL || "http://localhost:5000";
 
         function toggleForms() {
             const loginForm = document.getElementById('loginForm');

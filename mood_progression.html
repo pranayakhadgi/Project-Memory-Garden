@@ -156,9 +156,10 @@
         </div>
     </div>
 
+    <script src="config.js"></script>
     <script>
         // Configuration
-        const BACKEND_URL = "http://localhost:5000";
+        const BACKEND_URL = window.BACKEND_URL || "http://localhost:5000";
         
         // Get user data from localStorage
         const token = localStorage.getItem("mg_token");

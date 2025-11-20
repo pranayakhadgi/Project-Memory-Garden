@@ -1,5 +1,6 @@
 // ===== CONFIG =====
-const BACKEND_URL = "http://localhost:5000";
+// BACKEND_URL should be set by config.js if included in HTML, otherwise fallback
+const BACKEND_URL = window.BACKEND_URL || "http://localhost:5000";
 
 // Log so we know the script ran
 console.log("app.js loaded");

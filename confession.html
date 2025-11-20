@@ -833,6 +833,7 @@
     </div>
 
     <!-- Script -->
+    <script src="config.js"></script>
     <script>
         // ===== Auth + mood storage
         const token = localStorage.getItem("mg_token");
@@ -840,7 +841,7 @@
         if (!token || !user) window.location.href = "index.html";
 
         const MOOD_KEY = `mg_current_mood_${user.id || user.username}`;
-        const BACKEND = "http://localhost:5000";
+        const BACKEND = window.BACKEND_URL || "http://localhost:5000";
 
         function currentMood() {
             const m = (localStorage.getItem(MOOD_KEY) || "neutral").toLowerCase();
