@@ -46,6 +46,8 @@ app.use(
     credentials: false,
   })
 );
+app.use(express.json());
+
 // Serve static files (HTML, CSS, JS, images, etc.) from root directory
 // This allows Vercel to serve frontend files through the Express app
 app.use(express.static(process.cwd(), {
