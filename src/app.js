@@ -14,32 +14,39 @@ const app = express();
 
 /**
  * Middleware - Set security headers FIRST, before anything else
+ * IMPORTANT: This must run before static file serving
  */
-// Set CSP headers as early as possible to override any default Vercel headers
 app.use((req, res, next) => {
   // Set CSP for all non-API routes (HTML, CSS, JS files)
   const isApiRoute = req.path.startsWith('/api/') || 
                      req.path.startsWith('/auth/') || 
                      req.path.startsWith('/ai/') ||
-                     req.path === '/health';
+                     req.path === '/health' ||
+                     req.path === '/debug-headers';
   
   if (!isApiRoute) {
-    // Force remove any existing CSP header and set our own
-    // Use res.removeHeader and then setHeader to ensure override
-    try {
-      res.removeHeader('Content-Security-Policy');
-    } catch (e) {
-      // Header might not exist, that's okay
+    // CRITICAL: Remove any existing CSP header first, then set our own
+    // This ensures we override Vercel's default 'default-src none'
+    const existingHeaders = res.getHeaders();
+    if (existingHeaders['content-security-policy']) {
+      res.removeHeader('content-security-policy');
     }
-    // Set our CSP header - this should override Vercel's default
+    if (existingHeaders['Content-Security-Policy']) {
+      res.removeHeader('Content-Security-Policy');
+    }
+    
+    // Set our permissive CSP header
     res.setHeader(
       'Content-Security-Policy',
       "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: blob:; font-src 'self' https://cdn.jsdelivr.net data:; connect-src 'self' https:; frame-ancestors 'none'; base-uri 'self'; form-action 'self';"
     );
   }
+  
+  // Set other security headers
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('X-XSS-Protection', '1; mode=block');
+  
   next();
 });
 
