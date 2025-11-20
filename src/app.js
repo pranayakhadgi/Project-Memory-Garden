@@ -13,30 +13,19 @@ import flowersRoutes from "./routes/flowers.routes.js";
 const app = express();
 
 /**
- * Middleware
+ * Middleware - Set security headers FIRST, before anything else
  */
-app.use(
-  cors({
-    // Allow both localhost and Vercel deployment URLs
-    origin: process.env.CORS_ORIGIN 
-      ? process.env.CORS_ORIGIN.split(",").map(url => url.trim())
-      : ["http://localhost:5500", "http://127.0.0.1:5500", /\.vercel\.app$/, /\.vercel\.dev$/],
-    credentials: false,
-  })
-);
-app.use(express.json());
-
-// Set Content-Security-Policy headers for all responses
-// This is more reliable than vercel.json headers for serverless functions
-// Must be before static file serving to ensure headers are set
+// Set CSP headers as early as possible to override any default Vercel headers
 app.use((req, res, next) => {
-  // Set CSP for HTML files and root path, but not for API endpoints
+  // Set CSP for all non-API routes (HTML, CSS, JS files)
   const isApiRoute = req.path.startsWith('/api/') || 
                      req.path.startsWith('/auth/') || 
                      req.path.startsWith('/ai/') ||
                      req.path === '/health';
   
   if (!isApiRoute) {
+    // Override any existing CSP header
+    res.removeHeader('Content-Security-Policy');
     res.setHeader(
       'Content-Security-Policy',
       "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: blob:; font-src 'self' https://cdn.jsdelivr.net data:; connect-src 'self' https:; frame-ancestors 'none'; base-uri 'self'; form-action 'self';"
@@ -48,6 +37,15 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use(
+  cors({
+    // Allow both localhost and Vercel deployment URLs
+    origin: process.env.CORS_ORIGIN 
+      ? process.env.CORS_ORIGIN.split(",").map(url => url.trim())
+      : ["http://localhost:5500", "http://127.0.0.1:5500", /\.vercel\.app$/, /\.vercel\.dev$/],
+    credentials: false,
+  })
+);
 // Serve static files (HTML, CSS, JS, images, etc.) from root directory
 // This allows Vercel to serve frontend files through the Express app
 app.use(express.static(process.cwd(), {
