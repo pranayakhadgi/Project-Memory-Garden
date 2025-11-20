@@ -75,4 +75,15 @@ app.use("/api/flowers", flowersRoutes);
  */
 app.get("/health", (_req, res) => res.json({ ok: true }));
 
+/**
+ * Debug endpoint to check headers
+ */
+app.get("/debug-headers", (_req, res) => {
+  res.json({
+    csp: res.getHeader('Content-Security-Policy'),
+    allHeaders: res.getHeaders(),
+    requestHeaders: _req.headers
+  });
+});
+
 export default app;
