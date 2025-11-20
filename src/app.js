@@ -24,8 +24,14 @@ app.use((req, res, next) => {
                      req.path === '/health';
   
   if (!isApiRoute) {
-    // Override any existing CSP header
-    res.removeHeader('Content-Security-Policy');
+    // Force remove any existing CSP header and set our own
+    // Use res.removeHeader and then setHeader to ensure override
+    try {
+      res.removeHeader('Content-Security-Policy');
+    } catch (e) {
+      // Header might not exist, that's okay
+    }
+    // Set our CSP header - this should override Vercel's default
     res.setHeader(
       'Content-Security-Policy',
       "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: blob:; font-src 'self' https://cdn.jsdelivr.net data:; connect-src 'self' https:; frame-ancestors 'none'; base-uri 'self'; form-action 'self';"
