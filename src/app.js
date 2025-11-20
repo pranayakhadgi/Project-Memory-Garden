@@ -26,6 +26,28 @@ app.use(
 );
 app.use(express.json());
 
+// Set Content-Security-Policy headers for all responses
+// This is more reliable than vercel.json headers for serverless functions
+// Must be before static file serving to ensure headers are set
+app.use((req, res, next) => {
+  // Set CSP for HTML files and root path, but not for API endpoints
+  const isApiRoute = req.path.startsWith('/api/') || 
+                     req.path.startsWith('/auth/') || 
+                     req.path.startsWith('/ai/') ||
+                     req.path === '/health';
+  
+  if (!isApiRoute) {
+    res.setHeader(
+      'Content-Security-Policy',
+      "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: blob:; font-src 'self' https://cdn.jsdelivr.net data:; connect-src 'self' https:; frame-ancestors 'none'; base-uri 'self'; form-action 'self';"
+    );
+  }
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  next();
+});
+
 // Serve static files (HTML, CSS, JS, images, etc.) from root directory
 // This allows Vercel to serve frontend files through the Express app
 app.use(express.static(process.cwd(), {
